@@ -17,32 +17,15 @@ class Colors:
 
 class ChangePassword:
     def __init__(self, user_data_file):
-        """
-        Initializes the ChangePassword class with a user data file.
-        Args:
-            user_data_file (str): Path to the user data file.
-        """
+
         self.user_data_file = os.path.join("Database_txt", user_data_file)
 
     def hash_password(self, password, salt):
-        """
-        Hashes the password using SHA256.
-        Args:
-            password (str): The password to hash.
-            salt (bytes): The salt value for hashing.
-        Returns:
-            str: The hashed password as a hex digest.
-        """
+       
         return hashlib.sha256(salt + password.encode()).hexdigest()
 
     def validate_password_strength(self, password):
-        """
-        Validates the strength of a password.
-        Args:
-            password (str): The password to validate.
-        Returns:
-            bool: True if the password is strong, False otherwise.
-        """
+      
         print(f"{Colors.HEADER}Validating password strength...{Colors.ENDC}")
         if len(password) < 8:
             print(f"{Colors.WARNING}Password must be at least 8 characters long.{Colors.ENDC}")
