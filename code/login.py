@@ -7,7 +7,8 @@ from change_password import ChangePassword  # Import ChangePassword class
 class LoginSystem:
     def __init__(self, user_data_file):
         self.user_data_file = os.path.join("Database_txt", user_data_file)
-        self.max_failed_attempts = 4  # Configurable maximum attempts
+        self.max_failed_attempts = 3  # Configurable maximum attempts for email/phone
+        self.max_failed_password_attempts = 4  # Configurable maximum password attempts
         self.initial_delay_time = 30  # Configurable initial delay in seconds
         self.change_password_handler = ChangePassword(user_data_file)  # Instantiate ChangePassword class
 
@@ -46,7 +47,7 @@ class LoginSystem:
         """Displays the menu for logged-in users."""
         while True:
             print("=" * 30)
-            print("\n\033[1;36m--- User Menu ---\033[0m")
+            print("\n\033[1;36m      --- User Menu ---\033[0m")
             print("=" * 30)
             print("\033[1;33m1. Change Password\033[0m")
             print("\033[1;33m2. Logout\033[0m")
@@ -69,10 +70,16 @@ class LoginSystem:
 
         while True:
             if failed_attempts >= self.max_failed_attempts:
-                print(f"\033[1;31mToo many failed attempts. Please wait {delay_time} seconds before trying again.\033[0m")
+                print(f"\033[1;31mToo many failed attempts with email or phone. Please wait {delay_time} seconds before trying again.\033[0m")
                 time.sleep(delay_time)
                 delay_time *= 3  # Exponential backoff
                 failed_attempts = 0
+
+                # After 3 wrong attempts, ask if the user wants to try again or not
+                try_again = input("\033[1;34mWould you like to try again? (yes/no): \033[0m").strip().lower()
+                if try_again != 'yes':
+                    print("\033[1;32mReturning to the main interface...\033[0m")
+                    return  # Return to the main interface (or exit)
 
             email_or_phone = input("\033[1;34mEnter your email or phone number: \033[0m").strip()
             user_data = self.find_user(email_or_phone)
@@ -81,6 +88,7 @@ class LoginSystem:
                 print("\033[1;31mNo account found with that email or phone number. Please try again.\033[0m")
                 failed_attempts += 1
                 continue
+
 
             password = input("\033[1;34mEnter your password: \033[0m").strip()
             salt_hex = user_data[2]

@@ -7,14 +7,14 @@ def display_menu():
     """Displays the main menu options in a column-style layout."""
     print("\n")
     print("=" * 50)
-    print(f"{'--- Welcome To Our User Management System ---':^50}")
+    print(f"\033[1;34m{'--- ***Welcome To VERIFY ME*** ---':^50}\033[0m")
     print("=" * 50)
-    print(f"{'Option':<10}{'Description':<40}")
+    print(f"\033[1;35m{'Option':<10}{'Description':<40}\033[0m")
     print("-" * 50)
-    print(f"{'1':<10}{'Register':<40}")
-    print(f"{'2':<10}{'Login':<40}")
-    print(f"{'3':<10}{'Forgot Password':<40}")
-    print(f"{'4':<10}{'Exit':<40}")
+    print(f"\033[1;32m{'1.':<10}{'Register':<40}\033[0m")
+    print(f"\033[1;32m{'2.':<10}{'Login':<40}\033[0m")
+    print(f"\033[1;32m{'3.':<10}{'Forgot Password':<40}\033[0m")
+    print(f"\033[1;32m{'4.':<10}{'Exit':<40}\033[0m")
     print("=" * 50)
 
 def main():
@@ -54,7 +54,9 @@ def main():
                     print("Continuing without changing password.")
 
         elif choice == "3":
-            print("\n--- Password Recovery ---")
+            print("=" * 50)
+            print("\n            \033[1;36m*** Forget Password ***\033[0m")
+            print("=" * 50)
             recover_password_system.recover_password()
 
         elif choice == "4":

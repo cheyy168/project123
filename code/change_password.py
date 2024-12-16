@@ -1,5 +1,6 @@
 import hashlib
 import os
+import time
 
 # Define color codes for terminal output
 class Colors:
@@ -58,39 +59,70 @@ class ChangePassword:
         print(f"{Colors.OKGREEN}Password is strong!{Colors.ENDC}")
         return True
 
+    def delay_and_retry(self, delay_seconds):
+        """
+        Implements a delay before retrying password input.
+        Args:
+            delay_seconds (int): Number of seconds to delay.
+        Returns:
+            bool: True if the user chooses to retry, False otherwise.
+        """
+        print(f"{Colors.WARNING}Too many failed attempts. Please wait {delay_seconds} seconds...{Colors.ENDC}")
+        time.sleep(delay_seconds)
+        retry_choice = input(f"{Colors.OKCYAN}Do you want to try again? (yes/no): {Colors.ENDC}").strip().lower()
+        return retry_choice == "yes"
+
     def change_password(self, user_identifier):
         """
         Handles the process of changing a user's password.
         Args:
             user_identifier (str): The user's email or phone number to identify their account.
         """
-        print(f"{Colors.OKCYAN}=== Change Password ==={Colors.ENDC}")
+        #print(f"{Colors.OKCYAN}=== Change Password ==={Colors.ENDC}")
 
-        # Step 1: Prompt for current password
-        current_password = input("Enter your current password: ").strip()
+        max_attempts = 3
+        delay_seconds = 30
 
-        # Step 2: Validate current password
-        current_password_valid = False
-        with open(self.user_data_file, "r") as file:
-            for line in file:
-                data = line.strip().split(",")
-                if len(data) < 4:
-                    continue
+        # Attempt loop for entering the current password
+        while True:
+            attempts = 0
+            while attempts < max_attempts:
+                current_password = input("Enter your current password: ").strip()
+                
+                # Validate current password
+                current_password_valid = False
+                with open(self.user_data_file, "r") as file:
+                    for line in file:
+                        data = line.strip().split(",")
+                        if len(data) < 4:
+                            continue
 
-                email_or_phone, username, salt_hex, hashed_password = data
+                        email_or_phone, username, salt_hex, hashed_password = data
 
-                if user_identifier == email_or_phone:
-                    salt = bytes.fromhex(salt_hex)
-                    hashed_current_password = self.hash_password(current_password, salt)
+                        if user_identifier == email_or_phone:
+                            salt = bytes.fromhex(salt_hex)
+                            hashed_current_password = self.hash_password(current_password, salt)
 
-                    if hashed_current_password == hashed_password:
-                        current_password_valid = True
-                        break
+                            if hashed_current_password == hashed_password:
+                                current_password_valid = True
+                                break
 
-        # If current password is incorrect, exit
-        if not current_password_valid:
-            print(f"{Colors.FAIL}Current password is incorrect. Password change failed.{Colors.ENDC}")
-            return
+                if current_password_valid:
+                    break  # Exit the attempts loop if password is valid
+
+                attempts += 1
+                print(f"{Colors.FAIL}Incorrect password. Attempts remaining: {max_attempts - attempts}.{Colors.ENDC}")
+
+            if current_password_valid:
+                break
+
+            # Handle delay and retry decision after max attempts
+            if not self.delay_and_retry(delay_seconds):
+                print(f"{Colors.FAIL}Password change canceled.{Colors.ENDC}")
+                return
+
+            # Increase delay time after each set of 3 attempts
+            delay_seconds *= 3
 
         # Step 3: Prompt for new password
         new_password = input("Enter your new password: ").strip()
