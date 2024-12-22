@@ -17,15 +17,12 @@ class Colors:
 
 class ChangePassword:
     def __init__(self, user_data_file):
-
         self.user_data_file = os.path.join("Database_txt", user_data_file)
 
     def hash_password(self, password, salt):
-       
         return hashlib.sha256(salt + password.encode()).hexdigest()
 
     def validate_password_strength(self, password):
-      
         print(f"{Colors.HEADER}Validating password strength...{Colors.ENDC}")
         if len(password) < 8:
             print(f"{Colors.WARNING}Password must be at least 8 characters long.{Colors.ENDC}")
@@ -43,26 +40,12 @@ class ChangePassword:
         return True
 
     def delay_and_retry(self, delay_seconds):
-        """
-        Implements a delay before retrying password input.
-        Args:
-            delay_seconds (int): Number of seconds to delay.
-        Returns:
-            bool: True if the user chooses to retry, False otherwise.
-        """
         print(f"{Colors.WARNING}Too many failed attempts. Please wait {delay_seconds} seconds...{Colors.ENDC}")
         time.sleep(delay_seconds)
         retry_choice = input(f"{Colors.OKCYAN}Do you want to try again? (yes/no): {Colors.ENDC}").strip().lower()
         return retry_choice == "yes"
 
     def change_password(self, user_identifier):
-        """
-        Handles the process of changing a user's password.
-        Args:
-            user_identifier (str): The user's email or phone number to identify their account.
-        """
-        #print(f"{Colors.OKCYAN}=== Change Password ==={Colors.ENDC}")
-
         max_attempts = 3
         delay_seconds = 30
 
@@ -71,24 +54,31 @@ class ChangePassword:
             attempts = 0
             while attempts < max_attempts:
                 current_password = input("Enter your current password: ").strip()
-                
+
                 # Validate current password
                 current_password_valid = False
-                with open(self.user_data_file, "r") as file:
-                    for line in file:
-                        data = line.strip().split(",")
-                        if len(data) < 4:
-                            continue
+                try:
+                    with open(self.user_data_file, "r") as file:
+                        for line in file:
+                            data = line.strip().split(",")
+                            if len(data) < 4:
+                                continue
 
-                        email_or_phone, username, salt_hex, hashed_password = data
+                            email_or_phone, username, salt_hex, hashed_password = data
 
-                        if user_identifier == email_or_phone:
-                            salt = bytes.fromhex(salt_hex)
-                            hashed_current_password = self.hash_password(current_password, salt)
+                            if user_identifier == email_or_phone:
+                                salt = bytes.fromhex(salt_hex)
+                                hashed_current_password = self.hash_password(current_password, salt)
 
-                            if hashed_current_password == hashed_password:
-                                current_password_valid = True
-                                break
+                                if hashed_current_password == hashed_password:
+                                    current_password_valid = True
+                                    break
+                except FileNotFoundError:
+                    print(f"{Colors.FAIL}Error: User data file not found. Please check the file path.{Colors.ENDC}")
+                    return
+                except IOError:
+                    print(f"{Colors.FAIL}Error: Unable to read the user data file.{Colors.ENDC}")
+                    return
 
                 if current_password_valid:
                     break  # Exit the attempts loop if password is valid
@@ -119,26 +109,34 @@ class ChangePassword:
         password_updated = False
 
         # Step 4: Update password
-        with open(self.user_data_file, "r") as file, open(temp_file, "w") as temp:
-            for line in file:
-                data = line.strip().split(",")
-                if len(data) < 4:
-                    temp.write(line)
-                    continue
+        try:
+            with open(self.user_data_file, "r") as file, open(temp_file, "w") as temp:
+                for line in file:
+                    data = line.strip().split(",")
+                    if len(data) < 4:
+                        temp.write(line)
+                        continue
 
-                email_or_phone, username, salt_hex, hashed_password = data
+                    email_or_phone, username, salt_hex, hashed_password = data
 
-                if user_identifier == email_or_phone:
-                    # Generate a new salt and hash the new password
-                    salt = os.urandom(16)
-                    hashed_new_password = self.hash_password(new_password, salt)
-                    temp.write(f"{email_or_phone},{username},{salt.hex()},{hashed_new_password}\n")
-                    password_updated = True
-                else:
-                    temp.write(line)
+                    if user_identifier == email_or_phone:
+                        # Generate a new salt and hash the new password
+                        salt = os.urandom(16)
+                        hashed_new_password = self.hash_password(new_password, salt)
+                        temp.write(f"{email_or_phone},{username},{salt.hex()},{hashed_new_password}\n")
+                        password_updated = True
+                    else:
+                        temp.write(line)
 
-        # Replace the old data file with the updated one
-        os.replace(temp_file, self.user_data_file)
+            # Replace the old data file with the updated one
+            os.replace(temp_file, self.user_data_file)
+
+        except FileNotFoundError:
+            print(f"{Colors.FAIL}Error: User data file not found. Cannot update password.{Colors.ENDC}")
+            return
+        except IOError:
+            print(f"{Colors.FAIL}Error: Unable to access or write to the user data file.{Colors.ENDC}")
+            return
 
         # Provide feedback to the user
         if password_updated:

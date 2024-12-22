@@ -18,25 +18,35 @@ class LoginSystem:
 
     def find_user(self, email_or_phone):
         """Find user details in the database."""
-        with open(self.user_data_file, "r") as file:
-            for line in file:
-                data = line.strip().split(",")
-                if len(data) >= 4 and data[0] == email_or_phone:
-                    return data
+        try:
+            with open(self.user_data_file, "r") as file:
+                for line in file:
+                    data = line.strip().split(",")
+                    if len(data) >= 4 and data[0] == email_or_phone:
+                        return data
+        except FileNotFoundError:
+            print("\033[1;31mError: User data file not found. Please check the file path.\033[0m")
+        except IOError:
+            print("\033[1;31mError: An error occurred while accessing the user data file.\033[0m")
         return None
 
     def update_user_data(self, email_or_phone, new_data):
         """Updates user data for a given email or phone."""
-        updated_lines = []
-        with open(self.user_data_file, "r") as file:
-            for line in file:
-                data = line.strip().split(",")
-                if len(data) >= 4 and data[0] == email_or_phone:
-                    updated_lines.append(new_data + "\n")
-                else:
-                    updated_lines.append(line)
-        with open(self.user_data_file, "w") as file:
-            file.writelines(updated_lines)
+        try:
+            updated_lines = []
+            with open(self.user_data_file, "r") as file:
+                for line in file:
+                    data = line.strip().split(",")
+                    if len(data) >= 4 and data[0] == email_or_phone:
+                        updated_lines.append(new_data + "\n")
+                    else:
+                        updated_lines.append(line)
+            with open(self.user_data_file, "w") as file:
+                file.writelines(updated_lines)
+        except FileNotFoundError:
+            print("\033[1;31mError: User data file not found. Please check the file path.\033[0m")
+        except IOError:
+            print("\033[1;31mError: An error occurred while accessing the user data file.\033[0m")
 
     def change_password(self, email_or_phone):
         """Allows the user to change their password by delegating to the ChangePassword class."""
@@ -57,7 +67,7 @@ class LoginSystem:
             if choice == "1":
                 self.change_password(email_or_phone)
             elif choice == "2":
-                print("\033[1;32mLogging out...\033[0m")
+                print("\033[1;32mLogging out Successfully...\033[0m")
                 break
             else:
                 print("\033[1;31mInvalid choice. Please try again.\033[0m")
@@ -88,7 +98,6 @@ class LoginSystem:
                 print("\033[1;31mNo account found with that email or phone number. Please try again.\033[0m")
                 failed_attempts += 1
                 continue
-
 
             password = input("\033[1;34mEnter your password: \033[0m").strip()
             salt_hex = user_data[2]

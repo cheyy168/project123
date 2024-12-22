@@ -42,16 +42,7 @@ def main():
             print("=" * 50)
             print("\n               \033[1;36m*** User Login ***\033[0m")
             print("=" * 50)
-            user_identifier = login_system.user_login()
-
-            # If login is successful (assume user_identifier is returned on success)
-            if user_identifier:
-                change_choice = input(
-                    "Do you want to change your password? (yes/no): ").strip().lower()
-                if change_choice == "yes":
-                    change_password_system.change_password(user_identifier)
-                else:
-                    print("Continuing without changing password.")
+            login_system.user_login()
 
         elif choice == "3":
             print("=" * 50)
